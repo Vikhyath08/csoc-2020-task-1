@@ -45,10 +45,12 @@ function register() {
     const username = document.getElementById('inputUsername').value.trim();
     const password = document.getElementById('inputPassword').value;
 
-    if (registerFieldsAreValid(firstName, lastName, email, username, password)) {
+    if (registerFieldsAreValid(firstName, lastName, email, username, password)) 
+    {
         displayInfoToast("Please wait...");
 
-        const dataForApiRequest = {
+        const dataForApiRequest = 
+        {
             name: firstName + " " + lastName,
             email: email,
             username: username,
@@ -59,31 +61,100 @@ function register() {
             url: API_BASE_URL + 'auth/register/',
             method: 'POST',
             data: dataForApiRequest,
-            success: function(data, status, xhr) {
+            success: function(data, status, xhr) 
+            {
                 localStorage.setItem('token', data.token);
                 window.location.href = '/';
             },
-            error: function(xhr, status, err) {
+            error: function(xhr, status, err) 
+            {
                 displayErrorToast('An account using same email or username is already created');
             }
         })
     }
 }
 
-function login() {
+function login() 
+{
     /***
      * @todo Complete this function.
      * @todo 1. Write code for form validation.
      * @todo 2. Fetch the auth token from backend and login the user.
      */
+    const username = document.getElementById('inputUsername').value.trim();
+    const password = document.getElementById('inputPassword').value;
+    if (loginFieldsAreValid(username, password))
+    {
+        displayInfoToast("Please Wait...");
+        const dataForApiRequest = 
+        {
+            username: username,
+            password: password
+        }
+        $.ajax({
+            url: API_BASE_URL + 'auth/login/',
+            method: 'POST',
+            data: dataForApiRequest,
+            success: function(data, status, xhr)
+            {
+                localStorage.setItem('token', data.token);
+                window.location.href = '/';
+                displaySuccessToast('Login Successful');
+            },
+            error: function(data, status, xhr)
+            {
+                displayErrorToast('Wrong Username and/or Password')
+            }
+        })
+    }
 }
 
-function addTask() {
+function loginFieldsAreValid(username, password)
+{
+    if (username == '' || password == '')
+    {
+        displayErrorToast("Please Enter All Information Properly");
+        return false;
+    }
+    return true;
+}
+
+function addTask() 
+{
     /**
      * @todo Complete this function.
      * @todo 1. Send the request to add the task to the backend server.
      * @todo 2. Add the task in the dom.
      */
+    const task = document.getElementById("add").value.trim()
+    if (task == '')
+    {
+        displayErrorToast("Invalid")
+        return
+    }
+    displayInfoToast("Please Wait");
+    const dataForApiRequest =
+    {
+        title : task
+    }
+    $.ajax({
+        url : API_BASE_URL + "todo/create/",
+        headers: {
+            Authorization: 'Token ' + localStorage.getItem('token'),
+        },
+        method: 'POST',
+        data: dataForApiRequest,
+        success: function(data, status, xhr)
+        {
+            displaySuccessToast("Task Successfully Added");
+            getTasks()
+        },
+        error: function(data, status, xhr)
+        {
+            displayErrorToast("Error Occured")
+        }
+    })
+    document.getElementById('add').value = '';
 }
 
 function editTask(id) {
@@ -99,6 +170,28 @@ function deleteTask(id) {
      * @todo 1. Send the request to delete the task to the backend server.
      * @todo 2. Remove the task from the dom.
      */
+    displayInfoToast("Please Wait");
+    const dataForApiRequest =
+    {
+        id : id
+    }
+    $.ajax({
+        url : API_BASE_URL + 'todo/' + id + '/',
+        headers: {
+            Authorization: 'Token ' + localStorage.getItem('token')
+        },
+        method: 'DELETE',
+        data: dataForApiRequest,
+        success: function(data, status, xhr)
+        {
+            displaySuccessToast("Task Successfully Deleted");
+            getTasks()
+        },
+        error: function(data, status, xhr)
+        {
+            displayErrorToast("Error Occured")
+        }
+    })
 }
 
 function updateTask(id) {
@@ -107,4 +200,37 @@ function updateTask(id) {
      * @todo 1. Send the request to update the task to the backend server.
      * @todo 2. Update the task in the dom.
      */
+    const task = document.getElementById("input-button-" + id).value.trim()
+    if (task == '')
+    {
+        displayErrorToast("Please Enter a value")
+        return
+    }
+    displayInfoToast("Please Wait");
+    const dataForApiRequest =
+    {
+        title : task,
+        id : id
+    }
+    $.ajax({
+        url : API_BASE_URL + 'todo/' + id + '/',
+        headers: {
+            Authorization: 'Token ' + localStorage.getItem('token')
+        },
+        method: 'PUT',
+        data: dataForApiRequest,
+        success: function(data, status, xhr)
+        {
+            displaySuccessToast("Task Successfully Updated");
+            getTasks()
+        },
+        error: function(data, status, xhr)
+        {
+            displayErrorToast("Error Occured")
+        }
+    })
+    document.getElementById('task-' + id).classList.remove('hideme');
+    document.getElementById('task-actions-' + id).classList.remove('hideme');
+    document.getElementById('input-button-' + id).classList.add('hideme');
+    document.getElementById('done-button-' + id).classList.add('hideme');
 }
